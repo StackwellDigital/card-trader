@@ -9,4 +9,4 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "card-trader-db"
-database_id = "REPLACE_WITH_YOUR_DATABASE_ID"
+database_id = "c9b3bea1-0a84-41f9-8c90-9400461f39ea"
