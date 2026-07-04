@@ -327,7 +327,7 @@ async function searchCard() {
       resultsEl.appendChild(div);
     });
   } catch (e) {
-    resultsEl.innerHTML = '<p class="hint">Lookup failed, try again.</p>';
+    resultsEl.innerHTML = `<p class="hint">Lookup failed: ${e.message}</p>`;
   }
 }
 
