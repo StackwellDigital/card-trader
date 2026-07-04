@@ -133,42 +133,55 @@ app.post('/api/trades/:id/respond', async (c) => {
 app.get('/api/lookup/pokemon', async (c) => {
   const name = c.req.query('name');
   if (!name) return c.json({ error: 'name query param required' }, 400);
-  const res = await fetch(
-    `https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(name)}*&pageSize=15`
-  );
-  const data = await res.json();
-  const cards = (data.data || []).map((card) => {
-    const prices = card.tcgplayer?.prices || {};
-    // pick whichever variant (normal/holofoil/reverseHolofoil/1stEdition) has a market price
-    const variant = Object.values(prices).find((v) => v?.market != null);
-    return {
-      name: card.name,
-      set_name: card.set?.name,
-      card_number: card.number,
-      image_url: card.images?.small,
-      value_usd: variant?.market ?? null,
-    };
-  });
-  return c.json(cards);
+  try {
+    const res = await fetch(
+      `https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(name)}*&pageSize=15`,
+      { headers: { Accept: 'application/json' } }
+    );
+    if (!res.ok) {
+      return c.json({ error: `pokemon API returned ${res.status}` }, 502);
+    }
+    const data = await res.json();
+    const cards = (data.data || []).map((card) => {
+      const prices = card.tcgplayer?.prices || {};
+      const variant = Object.values(prices).find((v) => v?.market != null);
+      return {
+        name: card.name,
+        set_name: card.set?.name,
+        card_number: card.number,
+        image_url: card.images?.small,
+        value_usd: variant?.market ?? null,
+      };
+    });
+    return c.json(cards);
+  } catch (err) {
+    return c.json({ error: 'pokemon lookup failed: ' + err.message }, 500);
+  }
 });
 
 // ---------- magic: the gathering lookup (Scryfall, free, no key needed) ----------
 app.get('/api/lookup/magic', async (c) => {
   const name = c.req.query('name');
   if (!name) return c.json({ error: 'name query param required' }, 400);
-  const res = await fetch(
-    `https://api.scryfall.com/cards/search?q=${encodeURIComponent(name)}&order=released`
-  );
-  if (!res.ok) return c.json([]); // Scryfall 404s when there are zero matches
-  const data = await res.json();
-  const cards = (data.data || []).slice(0, 15).map((card) => ({
-    name: card.name,
-    set_name: card.set_name,
-    card_number: card.collector_number,
-    image_url: card.image_uris?.small,
-    value_usd: card.prices?.usd ? parseFloat(card.prices.usd) : (card.prices?.usd_foil ? parseFloat(card.prices.usd_foil) : null),
-  }));
-  return c.json(cards);
+  try {
+    const res = await fetch(
+      `https://api.scryfall.com/cards/search?q=${encodeURIComponent(name)}&order=released`,
+      { headers: { Accept: 'application/json', 'User-Agent': 'CardTraderApp/1.0' } }
+    );
+    if (res.status === 404) return c.json([]); // Scryfall 404s when there are zero matches
+    if (!res.ok) return c.json({ error: `magic API returned ${res.status}` }, 502);
+    const data = await res.json();
+    const cards = (data.data || []).slice(0, 15).map((card) => ({
+      name: card.name,
+      set_name: card.set_name,
+      card_number: card.collector_number,
+      image_url: card.image_uris?.small,
+      value_usd: card.prices?.usd ? parseFloat(card.prices.usd) : (card.prices?.usd_foil ? parseFloat(card.prices.usd_foil) : null),
+    }));
+    return c.json(cards);
+  } catch (err) {
+    return c.json({ error: 'magic lookup failed: ' + err.message }, 500);
+  }
 });
 
 // re-check current market price for a card already in a collection
