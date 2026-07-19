@@ -232,6 +232,7 @@ nav.tabs button.active { color: var(--foil-1); }
     <div id="lookup-block">
       <div class="row">
         <input id="lookup-name" placeholder="Search card name...">
+        <input id="lookup-set" placeholder="Set (optional)">
         <button onclick="searchCard()">Search</button>
       </div>
       <div id="lookup-results"></div>
@@ -365,6 +366,7 @@ function onCategoryChange() {
   document.getElementById('lookup-block').style.display = cat === 'sports' ? 'none' : 'block';
   document.getElementById('sports-block').style.display = cat === 'sports' ? 'block' : 'none';
   document.getElementById('lookup-results').innerHTML = '';
+  document.getElementById('lookup-set').value = '';
   clearAddFields();
 }
 
@@ -379,11 +381,14 @@ function clearAddFields() {
 async function searchCard() {
   const cat = document.getElementById('add-category').value;
   const name = document.getElementById('lookup-name').value.trim();
+  const set = document.getElementById('lookup-set').value.trim();
   const resultsEl = document.getElementById('lookup-results');
   if (!name) return;
   resultsEl.innerHTML = '<p class="hint">Searching...</p>';
   try {
-    const results = await api(`/lookup/${cat}?name=${encodeURIComponent(name)}`);
+    let url = `/lookup/${cat}?name=${encodeURIComponent(name)}`;
+    if (set) url += `&set=${encodeURIComponent(set)}`;
+    const results = await api(url);
     if (!results.length) { resultsEl.innerHTML = '<p class="hint">No matches, try a different spelling.</p>'; return; }
     const grid = document.createElement('div');
     grid.className = 'result-grid';
