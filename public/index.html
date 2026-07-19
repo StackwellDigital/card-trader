@@ -258,6 +258,13 @@ nav.tabs button.active { color: var(--foil-1); }
     <input id="add-set" placeholder="Set" style="display:none">
     <input id="add-number" placeholder="Card #" style="display:none">
     <input id="add-image" type="hidden">
+    <select id="add-condition">
+      <option value="Near Mint">Near Mint</option>
+      <option value="Lightly Played">Lightly Played</option>
+      <option value="Moderately Played">Moderately Played</option>
+      <option value="Heavily Played">Heavily Played</option>
+      <option value="Damaged">Damaged</option>
+    </select>
     <input id="add-value" placeholder="Estimated value (USD)" type="number" step="0.01">
     <button onclick="addCard()">Add to collection</button>
   </div>
@@ -433,11 +440,12 @@ async function loadCards() {
     const sub = c.category === 'sports'
       ? `${c.manufacturer || ''} ${c.year || ''} ${c.set_name || ''}`.trim()
       : `${c.set_name || ''} ${c.card_number ? '#' + c.card_number : ''}`.trim();
+    const conditionLine = c.condition ? ` · ${c.condition}` : '';
     div.innerHTML = `<div class="left">
         ${c.image_url ? `<img class="thumb" src="${c.image_url}" alt="${c.name}" loading="lazy">` : ''}
         <div class="info">
           <strong>${c.name}</strong> <span class="badge">${c.category}</span>
-          <div class="meta">${sub}</div>
+          <div class="meta">${sub}${conditionLine}</div>
         </div>
       </div>
       <div>
@@ -478,6 +486,7 @@ async function addCard() {
       card_number: document.getElementById('sports-number').value.trim(),
       manufacturer: document.getElementById('sports-manufacturer').value,
       year: document.getElementById('sports-year').value.trim(),
+      condition: document.getElementById('add-condition').value,
       value_usd: document.getElementById('add-value').value || null,
       quantity: 1,
     };
@@ -490,6 +499,7 @@ async function addCard() {
       set_name: document.getElementById('add-set').value.trim(),
       card_number: document.getElementById('add-number').value.trim(),
       image_url: document.getElementById('add-image').value || null,
+      condition: document.getElementById('add-condition').value,
       value_usd: document.getElementById('add-value').value || null,
       quantity: 1,
     };
