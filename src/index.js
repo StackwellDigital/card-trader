@@ -132,10 +132,14 @@ app.post('/api/trades/:id/respond', async (c) => {
 // ---------- pokemon card lookup (free public API, key improves rate limits) ----------
 app.get('/api/lookup/pokemon', async (c) => {
   const name = c.req.query('name');
+  const set = c.req.query('set');
   if (!name) return c.json({ error: 'name query param required' }, 400);
   try {
+    const qParts = [`name:${name}*`];
+    if (set) qParts.push(`set.name:${set}*`);
+    const q = encodeURIComponent(qParts.join(' '));
     const res = await fetch(
-      `https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(name)}*&pageSize=15`,
+      `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=60`,
       {
         headers: {
           Accept: 'application/json',
