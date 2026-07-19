@@ -139,7 +139,7 @@ app.get('/api/lookup/pokemon', async (c) => {
     if (set) qParts.push(`set.name:${set}*`);
     const q = encodeURIComponent(qParts.join(' '));
     const res = await fetch(
-      `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=60`,
+      `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=100`,
       {
         headers: {
           Accept: 'application/json',
@@ -183,7 +183,7 @@ app.get('/api/lookup/magic', async (c) => {
     if (res.status === 404) return c.json([]); // Scryfall 404s when there are zero matches
     if (!res.ok) return c.json({ error: `magic API returned ${res.status}` }, 502);
     const data = await res.json();
-    const cards = (data.data || []).slice(0, 15).map((card) => ({
+    const cards = (data.data || []).slice(0, 40).map((card) => ({
       name: card.name,
       set_name: card.set_name,
       card_number: card.collector_number,
