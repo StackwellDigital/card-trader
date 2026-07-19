@@ -129,17 +129,25 @@ app.post('/api/trades/:id/respond', async (c) => {
   return c.json({ ok: true });
 });
 
-// ---------- pokemon card lookup (free public API, no key needed) ----------
+// ---------- pokemon card lookup (free public API, key improves rate limits) ----------
 app.get('/api/lookup/pokemon', async (c) => {
   const name = c.req.query('name');
   if (!name) return c.json({ error: 'name query param required' }, 400);
   try {
     const res = await fetch(
       `https://api.pokemontcg.io/v2/cards?q=name:${encodeURIComponent(name)}*&pageSize=15`,
-      { headers: { Accept: 'application/json' } }
+      {
+        headers: {
+          Accept: 'application/json',
+          'X-Api-Key': c.env.POKEMONTCG_API_KEY || '',
+        },
+      }
     );
     if (!res.ok) {
-      return c.json({ error: `pokemon API returned ${res.status}` }, 502);
+      return c.json({
+        error: `pokemon API returned ${res.status}`,
+        key_present: !!c.env.POKEMONTCG_API_KEY,
+      }, 502);
     }
     const data = await res.json();
     const cards = (data.data || []).map((card) => {
