@@ -137,6 +137,51 @@ nav.tabs button.active { color: var(--foil-1); }
   object-fit: cover;
   border-radius: 6px;
 }
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+.result-card {
+  background: var(--panel-2);
+  border: 1px solid #34374a;
+  border-radius: 12px;
+  padding: 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.result-card:hover {
+  border-color: var(--foil-1);
+  transform: translateY(-2px);
+}
+.result-card img {
+  width: 100%;
+  aspect-ratio: 5 / 7;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #12131a;
+  margin-bottom: 6px;
+}
+.result-card .rc-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.result-card .rc-meta {
+  color: var(--muted);
+  font-size: 0.72rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.result-card .rc-price {
+  margin-top: 4px;
+  display: inline-block;
+}
 </style>
 </head>
 <body>
@@ -340,22 +385,21 @@ async function searchCard() {
   try {
     const results = await api(`/lookup/${cat}?name=${encodeURIComponent(name)}`);
     if (!results.length) { resultsEl.innerHTML = '<p class="hint">No matches, try a different spelling.</p>'; return; }
-    resultsEl.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'result-grid';
     results.forEach((r, i) => {
       const div = document.createElement('div');
-      div.className = 'tile';
-      div.style.cursor = 'pointer';
+      div.className = 'result-card';
       div.onclick = () => pickResult(r);
-      div.innerHTML = `<div class="left">
-          ${r.image_url ? `<img class="thumb" src="${r.image_url}" alt="${r.name}" loading="lazy">` : ''}
-          <div class="info">
-            <strong>${r.name}</strong>
-            <div class="meta">${r.set_name || ''} ${r.card_number ? '#' + r.card_number : ''}</div>
-          </div>
-        </div>
-        <span class="badge">${r.value_usd != null ? '$' + Number(r.value_usd).toFixed(2) : 'no price'}</span>`;
-      resultsEl.appendChild(div);
+      div.innerHTML = `
+        ${r.image_url ? `<img src="${r.image_url}" alt="${r.name}" loading="lazy">` : ''}
+        <div class="rc-name">${r.name}</div>
+        <div class="rc-meta">${r.set_name || ''} ${r.card_number ? '#' + r.card_number : ''}</div>
+        <span class="badge rc-price">${r.value_usd != null ? '$' + Number(r.value_usd).toFixed(2) : 'no price'}</span>`;
+      grid.appendChild(div);
     });
+    resultsEl.innerHTML = '';
+    resultsEl.appendChild(grid);
   } catch (e) {
     resultsEl.innerHTML = `<p class="hint">Lookup failed: ${e.message}</p>`;
   }
